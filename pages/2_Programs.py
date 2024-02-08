@@ -91,7 +91,12 @@ if selected_program:
     st.write(f"Sections for {selected_program}:")
     sections = get_sections(selected_program)
     if sections:
-        new_sections = st.selectbox("Sections", sections, index=0)
+        new_sections = st.text_input("Edit Sections (comma-separated)", ",".join(sections))
+        if st.button("Update Sections"):
+            updated_sections = [section.strip() for section in new_sections.split(",")]
+            update_program_sections(selected_program, updated_sections)
+            st.write(f"Sections updated for {selected_program}: {updated_sections}")
+
 
 # Option to delete a program
 st.sidebar.header("Delete Program")
