@@ -40,14 +40,15 @@ def add_faculty_to_db(name, subjects, preferred_day, preferred_time, availabilit
     conn.close()
     st.success(f"Faculty member '{name}' added successfully")
 
-# Function to retrieve subjects from the database
+# Function to retrieve distinct subjects from the database
 def fetch_subjects():
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
-    c.execute("SELECT subject_name FROM subjects")
+    c.execute("SELECT DISTINCT subject_name FROM subjects")  # Use DISTINCT to retrieve unique subjects
     rows = c.fetchall()
     conn.close()
     return [row[0] for row in rows]
+
 
 # Streamlit UI for faculty registration
 def main():
@@ -55,7 +56,7 @@ def main():
 
     # Faculty input form
     with st.form("faculty_form"):
-        name = st.text_input("Name", placeholder="Type your name (First name MI. Surname)")
+        name = st.text_input("Name", placeholder="Type your name (Surname, First name MI.)")
         subjects = st.multiselect("Select Subjects", fetch_subjects())
         preferred_day = st.multiselect("Preferred Day", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"])
         preferred_time = st.multiselect("Preferred Time", ["7:00 AM", "7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",

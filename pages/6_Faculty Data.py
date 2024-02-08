@@ -27,6 +27,14 @@ def fetch_faculty_details(name):
     else:
         return None
 
+# Function to delete faculty data by name
+def delete_faculty_data(name):
+    conn = sqlite3.connect("faculty.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM faculty WHERE name=?", (name,))
+    conn.commit()
+    conn.close()
+
 # Streamlit UI for faculty selection and display
 def main():
     st.header("Faculty Schedule")
@@ -53,9 +61,15 @@ def main():
             st.markdown("##### Other Availability Info:")
             st.write(availability_info.strip())
 
+            # Delete button
+            if st.button("Delete Faculty Data"):
+                delete_faculty_data(selected_faculty_name)
+                st.write("Faculty data deleted successfully.")
+
             # Display timetable or any other visualization here
         else:
             st.write("No details found for the selected faculty.")
 
 if __name__ == "__main__":
     main()
+
