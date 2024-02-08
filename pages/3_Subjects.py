@@ -75,6 +75,21 @@ def fetch_subjects(program_name, section):
     conn.close()
     return rows
 
+# Function to duplicate subjects from one section to another within the same program
+def duplicate_subjects(selected_program, source_section, target_section):
+    conn = sqlite3.connect("subjects.db")
+    c = conn.cursor()
+    c.execute("SELECT subject_name, hours FROM subjects WHERE program_name=? AND section=?", (selected_program, source_section))
+    rows = c.fetchall()
+    for row in rows:
+        subject_name, hours = row
+        c.execute("INSERT INTO subjects (program_name, section, subject_name, hours) VALUES (?, ?, ?, ?)",
+                  (selected_program, target_section, subject_name, hours))
+    conn.commit()
+    conn.close()
+    st.success(f"Subjects duplicated from section '{source_section}' to section '{target_section}'")
+
+
 # Streamlit UI
 def main():
 
@@ -94,6 +109,13 @@ def main():
     selected_subject = st.sidebar.selectbox("Select Subject to Delete", [row[0] for row in fetch_subjects(selected_program, selected_section)])  # Only fetching subject_name
     if st.sidebar.button("Delete Subject"):
         delete_subject(selected_program, selected_section, selected_subject)
+
+    # Option to duplicate subjects
+    st.sidebar.header("Duplicate Subjects")
+    source_section = st.sidebar.selectbox("Select Source Section", fetch_sections(selected_program))
+    target_section = st.sidebar.selectbox("Select Target Section", fetch_sections(selected_program))
+    if st.sidebar.button("Duplicate Subjects"):
+        duplicate_subjects(selected_program, source_section, target_section)
 
     # Display subjects in a table
     st.header(f"{selected_program} {selected_section} Subjects")
