@@ -19,7 +19,7 @@ def fetch_faculty_names():
 def fetch_faculty_details(name):
     conn = sqlite3.connect("faculty.db")
     c = conn.cursor()
-    c.execute("SELECT subjects, preferred_day, preferred_time FROM faculty WHERE name=?", (name,))
+    c.execute("SELECT subjects, preferred_day, preferred_time, availability_info FROM faculty WHERE name=?", (name,))
     row = c.fetchone()
     conn.close()
     if row:
@@ -38,7 +38,7 @@ def main():
     if selected_faculty_name:
         faculty_details = fetch_faculty_details(selected_faculty_name)
         if faculty_details:
-            subjects, preferred_days, preferred_times = faculty_details
+            subjects, preferred_days, preferred_times, availability_info = faculty_details
 
             st.markdown("##### Selected Subjects:")
             for subject in subjects.split(","):
@@ -49,6 +49,10 @@ def main():
 
             st.markdown("##### Preferred Times:")
             st.write(", ".join(preferred_times.split(",")))
+
+            st.markdown("##### Other Availability Info:")
+            st.write(availability_info.strip())
+
             # Display timetable or any other visualization here
         else:
             st.write("No details found for the selected faculty.")
