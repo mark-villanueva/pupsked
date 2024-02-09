@@ -17,7 +17,8 @@ def create_subjects_table():
             program_name TEXT,
             section TEXT,
             subject_name TEXT,
-            hours INTEGER  -- New column for hours per subject
+            hours INTEGER,  -- New column for hours per subject
+            room TEXT       -- New column for room assignment
         )
     """)
     conn.commit()
@@ -25,7 +26,6 @@ def create_subjects_table():
 
 # Call the function to create the table before running the Streamlit app
 create_subjects_table()
-
 
 # Function to fetch programs from the database
 def fetch_programs():
@@ -49,10 +49,10 @@ def fetch_sections(program_name):
         return []
 
 # Function to add a new subject to the database
-def add_subject_to_db(program_name, section, subject_name, hours):  # Modified to include 'hours' parameter
+def add_subject_to_db(program_name, section, subject_name, hours, room):  # Modified to include 'hours' and 'room' parameters
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
-    c.execute("INSERT INTO subjects (program_name, section, subject_name, hours) VALUES (?, ?, ?, ?)", (program_name, section, subject_name, hours))  # Included 'hours'
+    c.execute("INSERT INTO subjects (program_name, section, subject_name, hours, room) VALUES (?, ?, ?, ?, ?)", (program_name, section, subject_name, hours, room))  # Included 'hours' and 'room'
     conn.commit()
     conn.close()
     st.success(f"Subject '{subject_name}' added successfully to program '{program_name}' in section '{section}'")
@@ -70,7 +70,7 @@ def delete_subject(program_name, section, subject_name):
 def fetch_subjects(program_name, section):
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
-    c.execute("SELECT subject_name, hours FROM subjects WHERE program_name=? AND section=?", (program_name, section))  # Included 'hours'
+    c.execute("SELECT subject_name, hours, room FROM subjects WHERE program_name=? AND section=?", (program_name, section))  # Included 'hours' and 'room'
     rows = c.fetchall()
     conn.close()
     return rows
@@ -79,16 +79,34 @@ def fetch_subjects(program_name, section):
 def duplicate_subjects(selected_program, source_section, target_section):
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
-    c.execute("SELECT subject_name, hours FROM subjects WHERE program_name=? AND section=?", (selected_program, source_section))
+    c.execute("SELECT subject_name, hours, room FROM subjects WHERE program_name=? AND section=?", (selected_program, source_section))  # Included 'hours' and 'room'
     rows = c.fetchall()
     for row in rows:
-        subject_name, hours = row
-        c.execute("INSERT INTO subjects (program_name, section, subject_name, hours) VALUES (?, ?, ?, ?)",
-                  (selected_program, target_section, subject_name, hours))
+        subject_name, hours, room = row
+        c.execute("INSERT INTO subjects (program_name, section, subject_name, hours, room) VALUES (?, ?, ?, ?, ?)",
+                  (selected_program, target_section, subject_name, hours, room))
     conn.commit()
     conn.close()
     st.success(f"Subjects duplicated from section '{source_section}' to section '{target_section}'")
 
+# Function to fetch rooms from the database
+def fetch_rooms():
+    conn = sqlite3.connect("rooms.db")
+    c = conn.cursor()
+    c.execute("SELECT room_name FROM rooms")
+    rows = c.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
+
+# Function to calculate available hours for the selected room
+def calculate_available_hours_for_room(program_name, section, room):
+    available_hours = 84  # Total available hours for each room
+    subjects = fetch_subjects(program_name, section)
+    for subject in subjects:
+        if subject[2] == room:  # Check if subject's room matches the selected room
+            hours = subject[1]  # Get the hours for the subject
+            available_hours -= hours  # Subtract subject hours from total available hours
+    return available_hours
 
 # Streamlit UI
 def main():
@@ -101,8 +119,12 @@ def main():
     # Add input for hours per subject
     hours_per_subject = st.sidebar.number_input("Hours Per Subject", value=1)  # Default value is 1
 
+    # Add dropdown for room assignment
+    available_rooms = fetch_rooms()
+    room_assignment = st.sidebar.selectbox("Room Assignment", available_rooms)
+
     if st.sidebar.button("Add Subject"):
-        add_subject_to_db(selected_program, selected_section, new_subject_name, hours_per_subject)  # Pass hours_per_subject
+        add_subject_to_db(selected_program, selected_section, new_subject_name, hours_per_subject, room_assignment)  # Pass hours_per_subject and room_assignment
 
     # Option to delete a subject
     st.sidebar.header("Delete Subject")
@@ -121,7 +143,8 @@ def main():
     st.header(f"{selected_program} {selected_section} Subjects")
     subjects = fetch_subjects(selected_program, selected_section)
     if subjects:
-        subject_df = pd.DataFrame(subjects, columns=["Subject Name", "Hours"])  # Column names for the DataFrame
+        subject_df = pd.DataFrame(subjects, columns=["Subject Name", "Hours", "Room"])  # Column names for the DataFrame
+        subject_df["Room's Available Hours"] = [calculate_available_hours_for_room(selected_program, selected_section, room) for room in subject_df["Room"]]
         st.table(subject_df)
     else:
         st.write("No subjects found for the selected program and section.")
