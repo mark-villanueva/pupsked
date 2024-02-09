@@ -40,16 +40,6 @@ def add_faculty_to_db(name, subjects, preferred_day, preferred_time, availabilit
     conn.close()
     st.success(f"Faculty member '{name}' added successfully")
 
-# Function to retrieve distinct subjects from the database
-def fetch_subjects():
-    conn = sqlite3.connect("subjects.db")
-    c = conn.cursor()
-    c.execute("SELECT DISTINCT subject_name FROM subjects")  # Use DISTINCT to retrieve unique subjects
-    rows = c.fetchall()
-    conn.close()
-    return [row[0] for row in rows]
-
-
 # Streamlit UI for faculty registration
 def main():
     st.header("Faculty Registration & Availability")
@@ -57,7 +47,6 @@ def main():
     # Faculty input form
     with st.form("faculty_form"):
         name = st.text_input("Name", placeholder="Type your name (Surname, First name MI.)")
-        subjects = st.multiselect("Select Subjects", fetch_subjects())
         preferred_day = st.multiselect("Preferred Day", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"])
         preferred_time = st.multiselect("Preferred Time", ["7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
                                                            "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM",
@@ -68,14 +57,13 @@ def main():
 
         # Show confirmation popup
         if submit_button:
-            subjects_text = ', '.join(subjects)
             preferred_day_text = ', '.join(preferred_day)
             preferred_time_text = ', '.join(preferred_time)
-            st.success(f"Dear {name}, We've taken note of your preferred subjects: {subjects_text}, your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Additional availability info: {availability_info}. While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
+            st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Additional availability info: {availability_info}. While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
 
     # Handling form submission
     if submit_button:
-        add_faculty_to_db(name, subjects, preferred_day, preferred_time, availability_info)
+        add_faculty_to_db(name, [], preferred_day, preferred_time, availability_info)  # Pass empty list for subjects
 
 if __name__ == "__main__":
     main()

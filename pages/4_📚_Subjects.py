@@ -122,6 +122,10 @@ def main():
     # Add dropdown for room assignment
     available_rooms = fetch_rooms()
     room_assignment = st.sidebar.selectbox("Room Assignment", available_rooms)
+    
+    # Calculate and display available hours for the selected room
+    available_hours = calculate_available_hours_for_room(selected_program, selected_section, room_assignment)
+    st.sidebar.text(f"Available Hours for {room_assignment}: {available_hours}")
 
     if st.sidebar.button("Add Subject"):
         add_subject_to_db(selected_program, selected_section, new_subject_name, hours_per_subject, room_assignment)  # Pass hours_per_subject and room_assignment
@@ -144,7 +148,6 @@ def main():
     subjects = fetch_subjects(selected_program, selected_section)
     if subjects:
         subject_df = pd.DataFrame(subjects, columns=["Subject Name", "Hours", "Room"])  # Column names for the DataFrame
-        subject_df["Room's Available Hours"] = [calculate_available_hours_for_room(selected_program, selected_section, room) for room in subject_df["Room"]]
         st.table(subject_df)
     else:
         st.write("No subjects found for the selected program and section.")

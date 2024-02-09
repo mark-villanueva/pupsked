@@ -5,6 +5,6 @@ st.set_page_config(
     page_icon="images/PUPLogo.png",
 )
 
-st.write("# PUPSKED 1-Click Scheduling!")
+st.write("# PUPSKED Dashboard")
 
 
