@@ -98,15 +98,31 @@ def fetch_rooms():
     conn.close()
     return [row[0] for row in rows]
 
-# Function to calculate available hours for the selected room
 def calculate_available_hours_for_room(program_name, section, room):
     available_hours = 84  # Total available hours for each room
+    conn = sqlite3.connect("subjects.db")
+    c = conn.cursor()
+
+    # Fetch and sum hours from duplicated subjects in other sections
+    c.execute("SELECT hours FROM subjects WHERE room=? AND program_name=? AND section!=?", (room, program_name, section))
+    duplicated_hours_other_sections = sum(row[0] for row in c.fetchall())  # Sum of hours from duplicated subjects in other sections
+
+    # Fetch and sum hours from duplicated subjects in other programs
+    c.execute("SELECT hours FROM subjects WHERE room=? AND program_name!=?", (room, program_name))
+    duplicated_hours_other_programs = sum(row[0] for row in c.fetchall())  # Sum of hours from duplicated subjects in other programs
+
+    conn.close()
+
+    available_hours -= (duplicated_hours_other_sections + duplicated_hours_other_programs)
+
     subjects = fetch_subjects(program_name, section)
     for subject in subjects:
         if subject[2] == room:  # Check if subject's room matches the selected room
             hours = subject[1]  # Get the hours for the subject
             available_hours -= hours  # Subtract subject hours from total available hours
     return available_hours
+
+
 
 # Streamlit UI
 def main():
@@ -126,6 +142,7 @@ def main():
     # Calculate and display available hours for the selected room
     available_hours = calculate_available_hours_for_room(selected_program, selected_section, room_assignment)
     st.sidebar.text(f"Available Hours for {room_assignment}: {available_hours}")
+
 
     if st.sidebar.button("Add Subject"):
         add_subject_to_db(selected_program, selected_section, new_subject_name, hours_per_subject, room_assignment)  # Pass hours_per_subject and room_assignment
