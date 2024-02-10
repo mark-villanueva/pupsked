@@ -46,9 +46,9 @@ st.title("Programs and Sections")
 
 # Option to add more programs
 st.sidebar.header("Add New Program")
+batch = st.sidebar.selectbox("Batch", ["Batch 1", "Batch 2"])
 new_program_name = st.sidebar.text_input("Program Name")
 new_sections = st.sidebar.text_input("Sections (comma-separated)")
-batch = st.sidebar.selectbox("Batch", ["Batch 1", "Batch 2"])
 
 if st.sidebar.button("Add Program"):
     sections_list = [section.strip() for section in new_sections.split(",")]

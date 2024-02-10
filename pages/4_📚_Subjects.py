@@ -103,17 +103,18 @@ def calculate_available_hours_for_room(program_name, section, room):
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
 
-    # Fetch and sum hours from duplicated subjects in other sections
+    # Fetch and sum hours from duplicated subjects in other sections within the same program and batch
     c.execute("SELECT hours FROM subjects WHERE room=? AND program_name=? AND section!=?", (room, program_name, section))
     duplicated_hours_other_sections = sum(row[0] for row in c.fetchall())  # Sum of hours from duplicated subjects in other sections
 
-    # Fetch and sum hours from duplicated subjects in other programs
+    # Fetch and sum hours from duplicated subjects in other programs and batches
     c.execute("SELECT hours FROM subjects WHERE room=? AND program_name!=?", (room, program_name))
     duplicated_hours_other_programs = sum(row[0] for row in c.fetchall())  # Sum of hours from duplicated subjects in other programs
 
     conn.close()
 
-    available_hours -= (duplicated_hours_other_sections + duplicated_hours_other_programs)
+    available_hours -= duplicated_hours_other_sections  # Subtract hours from other sections within the same program and batch
+    available_hours -= duplicated_hours_other_programs  # Subtract hours from other programs and batches
 
     subjects = fetch_subjects(program_name, section)
     for subject in subjects:
@@ -123,12 +124,24 @@ def calculate_available_hours_for_room(program_name, section, room):
     return available_hours
 
 
-
 # Streamlit UI
 def main():
 
     st.sidebar.header("Add New Subject")
-    selected_program = st.sidebar.selectbox("Select Program", fetch_programs())
+    # Program filter
+    selected_batch = st.sidebar.selectbox("Select Batch", ["Batch 1", "Batch 2"])
+
+    selected_programs = []
+    for program_name in fetch_programs():
+        conn = sqlite3.connect("programs.db")
+        c = conn.cursor()
+        c.execute("SELECT batch FROM programs WHERE name=?", (program_name,))
+        row = c.fetchone()
+        conn.close()
+        if row and row[0] == selected_batch:
+            selected_programs.append(program_name)
+
+    selected_program = st.sidebar.selectbox("Select Program", selected_programs)
     selected_section = st.sidebar.selectbox("Select Section", fetch_sections(selected_program))
     new_subject_name = st.sidebar.text_input("Subject Name")
 
