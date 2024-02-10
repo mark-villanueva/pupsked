@@ -141,7 +141,7 @@ def main():
     
     # Calculate and display available hours for the selected room
     available_hours = calculate_available_hours_for_room(selected_program, selected_section, room_assignment)
-    st.sidebar.text(f"Available Hours for {room_assignment}: {available_hours}")
+    st.sidebar.text(f"{room_assignment} availability: {available_hours}")
 
 
     if st.sidebar.button("Add Subject"):
