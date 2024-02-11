@@ -90,9 +90,9 @@ def main():
                                   placeholder="EXAMPLE: Monday-Friday: 5:00 pm - 9:00 pm, Saturday: Wholeday")
     
     # Program filter
-    selected_batch = st.multiselect("Select Batch", ["Batch 1", "Batch 2"])
+    selected_batch = st.selectbox("Select Batch", ["Batch 1", "Batch 2"])
     selected_programs = fetch_programs(selected_batch)
-    selected_program = st.multiselect("Select Program", selected_programs)
+    selected_program = st.selectbox("Select Program", selected_programs)
     
     # Section selection
     selected_sections = st.multiselect("Select Sections", fetch_sections(selected_program))
