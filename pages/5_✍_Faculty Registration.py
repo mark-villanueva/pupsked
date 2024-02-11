@@ -82,17 +82,24 @@ def main():
                                   placeholder="EXAMPLE: Monday-Friday: 5:00 pm - 9:00 pm, Saturday: Wholeday")
     
     # Program filter
-    selected_batch = st.selectbox("Select Batch", ["Batch 1", "Batch 2"])
-    selected_programs = fetch_programs(selected_batch)
-    selected_program = st.selectbox("Select Program", selected_programs)
+    selected_batches = st.multiselect("Select Batch", ["Batch 1", "Batch 2"])
+    selected_programs = []
+    for batch in selected_batches:
+        selected_programs.extend(fetch_programs(batch))
+    selected_programs = list(set(selected_programs))  # Remove duplicates
+    selected_program = st.multiselect("Select Program", selected_programs)
     
     # Section selection
-    selected_sections = st.multiselect("Select Sections", fetch_sections(selected_program))
+    selected_sections = []
+    for program in selected_program:
+        selected_sections.extend(st.multiselect(f"Select Sections for {program}", fetch_sections(program)))
+    selected_sections = list(set(selected_sections))  # Remove duplicates
     
     # Fetch subjects and hours for the selected program and sections
     subjects_with_hours = []
     for section in selected_sections:
-        subjects_with_hours.extend(fetch_subjects_with_hours(selected_program, section))
+        for program in selected_program:
+            subjects_with_hours.extend(fetch_subjects_with_hours(program, section))
 
     # Display subjects with hours in the dropdown
     subject_options = {f"{subject} ({hours} hours)": subject for subject, hours in subjects_with_hours}
@@ -100,13 +107,14 @@ def main():
 
     # Button to save registration
     if st.button("Register"):
-        if name and preferred_day and preferred_time and selected_batch and selected_program and selected_sections and selected_subjects:
-            save_faculty_registration(name, preferred_day, preferred_time, different_time, selected_batch, selected_program, selected_sections, selected_subjects)
+        if name and preferred_day and preferred_time and selected_batches and selected_programs and selected_sections and selected_subjects:
+            save_faculty_registration(name, preferred_day, preferred_time, different_time, selected_batches, selected_programs, selected_sections, selected_subjects)
             preferred_day_text = ", ".join(preferred_day)
             preferred_time_text = ", ".join(preferred_time)
             st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Additional availability info: {different_time}.Your selected subjects are {selected_subjects} While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
         else:
             st.warning("Please fill in all required fields.")
+
 
 if __name__ == "__main__":
     main()
