@@ -55,24 +55,16 @@ def create_faculty_table():
     conn.close()
 
 # Function to save faculty registration to database
-def save_faculty_registration(name, preferred_day, preferred_time, different_time, batch, program, section, subjects):
+def save_faculty_registration(name, preferred_day, preferred_time, different_time, batch, program, selected_sections, subjects):
     conn = sqlite3.connect("faculty.db")
     c = conn.cursor()
     preferred_day_str = ",".join(preferred_day)
     preferred_time_str = ",".join(preferred_time)
+    selected_sections_str = ",".join(selected_sections)  # Convert selected_sections list to string
     c.execute("INSERT INTO faculty (name, preferred_day, preferred_time, different_time, batch, program, section, subjects) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-              (name, preferred_day_str, preferred_time_str, different_time, batch, program, section, ",".join(subjects)))
+              (name, preferred_day_str, preferred_time_str, different_time, batch, program, selected_sections_str, ",".join(subjects)))
     conn.commit()
     conn.close()
-
-# Function to retrieve subjects and hours for a given program and section from the database
-def fetch_subjects_with_hours(program_name, section):
-    conn = sqlite3.connect("subjects.db")
-    c = conn.cursor()
-    c.execute("SELECT subject_name, hours FROM subjects WHERE program_name=? AND section=?", (program_name, section))
-    rows = c.fetchall()
-    conn.close()
-    return [(row[0], row[1]) for row in rows]
 
 # Streamlit UI
 def main():
@@ -108,10 +100,13 @@ def main():
 
     # Button to save registration
     if st.button("Register"):
-        save_faculty_registration(name, preferred_day, preferred_time, different_time, selected_batch, selected_program, selected_sections, selected_subjects)
-        preferred_day_text = ", ".join(preferred_day)
-        preferred_time_text = ", ".join(preferred_time)
-        st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Additional availability info: {different_time}.Your selected subjects are {selected_subjects} While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
+        if name and preferred_day and preferred_time and selected_batch and selected_program and selected_sections and selected_subjects:
+            save_faculty_registration(name, preferred_day, preferred_time, different_time, selected_batch, selected_program, selected_sections, selected_subjects)
+            preferred_day_text = ", ".join(preferred_day)
+            preferred_time_text = ", ".join(preferred_time)
+            st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Additional availability info: {different_time}.Your selected subjects are {selected_subjects} While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
+        else:
+            st.warning("Please fill in all required fields.")
 
 if __name__ == "__main__":
     main()

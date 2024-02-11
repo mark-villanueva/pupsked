@@ -6,7 +6,6 @@ st.set_page_config(
     page_icon="images/PUPLogo.png",
 )
 
-
 # Function to fetch registrations from the database
 def fetch_registrations():
     conn = sqlite3.connect("faculty.db")
@@ -19,7 +18,19 @@ def fetch_registrations():
 # Streamlit UI for displaying responses
 def display_responses():
     st.header("Faculty Registrations")
+    
+    # Fetch registrations
     registrations = fetch_registrations()
+    
+    # Get unique names
+    names = set([row[1] for row in registrations])
+    
+    # Dropdown for filtering by name
+    selected_name = st.selectbox("Filter by Name", ["All"] + sorted(names))
+    
+    if selected_name != "All":
+        registrations = [row for row in registrations if row[1] == selected_name]
+    
     if registrations:
         st.write("Here are the current registrations:")
         for row in registrations:
@@ -37,5 +48,3 @@ def display_responses():
 
 if __name__ == "__main__":
     display_responses()
-
-    
