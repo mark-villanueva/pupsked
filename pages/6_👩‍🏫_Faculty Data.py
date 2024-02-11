@@ -2,74 +2,40 @@ import streamlit as st
 import sqlite3
 
 st.set_page_config(
-    page_title="Faculty",
+    page_title="Faculty Data",
     page_icon="images/PUPLogo.png",
 )
 
-# Function to retrieve faculty names from the database
-def fetch_faculty_names():
+
+# Function to fetch registrations from the database
+def fetch_registrations():
     conn = sqlite3.connect("faculty.db")
     c = conn.cursor()
-    c.execute("SELECT name FROM faculty")
+    c.execute("SELECT * FROM faculty")
     rows = c.fetchall()
     conn.close()
-    return [row[0] for row in rows]
+    return rows
 
-# Function to fetch faculty details by name
-def fetch_faculty_details(name):
-    conn = sqlite3.connect("faculty.db")
-    c = conn.cursor()
-    c.execute("SELECT subjects, preferred_day, preferred_time, availability_info FROM faculty WHERE name=?", (name,))
-    row = c.fetchone()
-    conn.close()
-    if row:
-        return row
+# Streamlit UI for displaying responses
+def display_responses():
+    st.header("Faculty Registrations")
+    registrations = fetch_registrations()
+    if registrations:
+        st.write("Here are the current registrations:")
+        for row in registrations:
+            st.write(f"Name: {row[1]}")
+            st.write(f"Preferred Day: {row[2]}")
+            st.write(f"Preferred Time: {row[3]}")
+            st.write(f"Different Time: {row[4]}")
+            st.write(f"Batch: {row[5]}")
+            st.write(f"Program: {row[6]}")
+            st.write(f"Section: {row[7]}")
+            st.write(f"Subjects: {row[8]}")
+            st.write("---")
     else:
-        return None
-
-# Function to delete faculty data by name
-def delete_faculty_data(name):
-    conn = sqlite3.connect("faculty.db")
-    c = conn.cursor()
-    c.execute("DELETE FROM faculty WHERE name=?", (name,))
-    conn.commit()
-    conn.close()
-
-# Streamlit UI for faculty selection and display
-def main():
-    st.header("Faculty Schedule")
-
-    # Faculty selection dropdown
-    selected_faculty_name = st.selectbox("Select Faculty Name", fetch_faculty_names())
-
-    # Display faculty details
-    if selected_faculty_name:
-        faculty_details = fetch_faculty_details(selected_faculty_name)
-        if faculty_details:
-            subjects, preferred_days, preferred_times, availability_info = faculty_details
-
-            st.markdown("##### Selected Subjects:")
-            for subject in subjects.split(","):
-                st.write(subject.strip())
-
-            st.markdown("##### Preferred Days:")
-            st.write(", ".join(preferred_days.split(",")))
-
-            st.markdown("##### Preferred Times:")
-            st.write(", ".join(preferred_times.split(",")))
-
-            st.markdown("##### Other Availability Info:")
-            st.write(availability_info.strip())
-
-            # Delete button
-            if st.button("Delete Faculty Data"):
-                delete_faculty_data(selected_faculty_name)
-                st.write("Faculty data deleted successfully.")
-
-            # Display timetable or any other visualization here
-        else:
-            st.write("No details found for the selected faculty.")
+        st.write("No registrations yet.")
 
 if __name__ == "__main__":
-    main()
+    display_responses()
 
+    

@@ -6,7 +6,7 @@ st.set_page_config(
     page_icon="images/PUPLogo.png",
 )
 
-# Function to create the programs table if it doesn't exist
+# Function to create the programs and batches tables if they don't exist
 def create_table():
     conn = sqlite3.connect("programs.db")
     c = conn.cursor()
@@ -14,11 +14,24 @@ def create_table():
                     id INTEGER PRIMARY KEY,
                     name TEXT NOT NULL,
                     sections TEXT NOT NULL,
-                    batch TEXT NOT NULL  -- Add batch column
+                    batch TEXT NOT NULL
+                )''')
+    c.execute('''CREATE TABLE IF NOT EXISTS batches (
+                    id INTEGER PRIMARY KEY,
+                    name TEXT NOT NULL
                 )''')
     conn.commit()
     conn.close()
 
+
+# Function to fetch batches from the database
+def fetch_batches():
+    conn = sqlite3.connect("programs.db")
+    c = conn.cursor()
+    c.execute("SELECT name FROM batches")
+    rows = c.fetchall()
+    conn.close()
+    return [row[0] for row in rows]
 
 # Function to fetch programs from the database
 def fetch_programs():
@@ -38,15 +51,56 @@ def add_program_to_db(program_name, sections, batch):
     conn.close()
     st.success(f"Program '{program_name}' added successfully with sections: {sections} to Batch {batch}")
 
+# Function to add a new batch to the database
+def add_batch_to_db(batch_name):
+    conn = sqlite3.connect("programs.db")
+    c = conn.cursor()
+    c.execute("INSERT INTO batches (name) VALUES (?)", (batch_name,))
+    conn.commit()
+    conn.close()
+    st.success(f"Batch '{batch_name}' added successfully")
+
+# Function to delete a program from the database
+def delete_program_from_db(program_name):
+    conn = sqlite3.connect("programs.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM programs WHERE name=?", (program_name,))
+    conn.commit()
+    conn.close()
+    st.success(f"Program '{program_name}' deleted successfully")
+
+# Function to delete a batch from the database
+def delete_batch_from_db(batch_name):
+    conn = sqlite3.connect("programs.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM batches WHERE name=?", (batch_name,))
+    conn.commit()
+    conn.close()
+    st.success(f"Batch '{batch_name}' deleted successfully")
+
 # Create programs table if not exists
 create_table()
 
 # Streamlit UI
 st.title("Programs and Sections")
 
+# Streamlit UI for adding and deleting batches
+st.sidebar.header("Manage Batches")
+
+# Option to add a new batch
+new_batch_name = st.sidebar.text_input("New Batch Name")
+if st.sidebar.button("Add Batch"):
+    add_batch_to_db(new_batch_name)
+
+# Option to delete a batch
+batch_to_delete = st.sidebar.selectbox("Select Batch to Delete", fetch_batches())
+if st.sidebar.button("Delete Batch"):
+    delete_batch_from_db(batch_to_delete)
+
+
 # Option to add more programs
 st.sidebar.header("Add New Program")
-batch = st.sidebar.selectbox("Batch", ["Batch 1", "Batch 2"])
+batch = st.sidebar.selectbox("Batch", fetch_batches())
 new_program_name = st.sidebar.text_input("Program Name")
 new_sections = st.sidebar.text_input("Sections (comma-separated)")
 
@@ -55,7 +109,7 @@ if st.sidebar.button("Add Program"):
     add_program_to_db(new_program_name, sections_list, batch)
 
 # Program filter
-selected_batch = st.selectbox("Select Batch", ["Batch 1", "Batch 2"])
+selected_batch = st.selectbox("Select Batch", fetch_batches())
 
 selected_programs = []
 for program_name in fetch_programs():
@@ -93,9 +147,5 @@ if selected_program:
 st.sidebar.header("Delete Program")
 program_to_delete = st.sidebar.selectbox("Select Program to Delete", selected_programs)
 if st.sidebar.button("Delete Program"):
-    conn = sqlite3.connect("programs.db")
-    c = conn.cursor()
-    c.execute("DELETE FROM programs WHERE name=?", (program_to_delete,))
-    conn.commit()
-    conn.close()
-    st.success(f"Program '{program_to_delete}' deleted successfully")
+    delete_program_from_db(program_to_delete)
+
