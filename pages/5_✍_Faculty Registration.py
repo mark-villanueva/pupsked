@@ -45,24 +45,24 @@ def create_faculty_table():
                     name TEXT,
                     preferred_day TEXT,
                     preferred_time TEXT,
-                    different_time TEXT,
                     batch TEXT,
                     program TEXT,
                     section TEXT,
-                    subjects TEXT
+                    subjects TEXT,
+                    notes TEXT
                 )''')
     conn.commit()
     conn.close()
 
 # Function to save faculty registration to database
-def save_faculty_registration(name, preferred_day, preferred_time, different_time, batch, program, selected_sections, subjects):
+def save_faculty_registration(name, preferred_day, preferred_time, notes, batch, program, selected_sections, subjects):
     conn = sqlite3.connect("faculty.db")
     c = conn.cursor()
     preferred_day_str = ",".join(preferred_day)
     preferred_time_str = ",".join(preferred_time)
     selected_sections_str = ",".join(selected_sections)  # Convert selected_sections list to string
-    c.execute("INSERT INTO faculty (name, preferred_day, preferred_time, different_time, batch, program, section, subjects) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-              (name, preferred_day_str, preferred_time_str, different_time, batch, program, selected_sections_str, ",".join(subjects)))
+    c.execute("INSERT INTO faculty (name, preferred_day, preferred_time, notes, batch, program, section, subjects) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+              (name, preferred_day_str, preferred_time_str, notes, batch, program, selected_sections_str, ",".join(subjects)))
     conn.commit()
     conn.close()
 
@@ -74,12 +74,26 @@ def main():
     # Input fields
     name = st.text_input("Name", placeholder="Type your name (Surname, First name MI.)")
     preferred_day = st.multiselect("Preferred Day", ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"])
-    preferred_time = st.multiselect("Preferred Time", ["7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
-                                                       "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM",
-                                                       "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-                                                       "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"])
-    different_time = st.text_area("Type here if you have Different Available Time for Different Days",
-                                  placeholder="EXAMPLE: Monday-Friday: 5:00 pm - 9:00 pm, Saturday: Wholeday")
+    
+    preferred_time_option = None
+    if preferred_day:
+        preferred_time_option = st.selectbox("Time for Selected Day/s", ["Same Time", "Varied Time"])
+
+    if preferred_time_option == "Same Time":
+        preferred_time = st.multiselect("Preferred Time", ["7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+                                                           "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM",
+                                                           "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
+                                                           "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"])
+    else:
+        preferred_time = None
+        if preferred_day:
+            preferred_time_per_day = {}
+            for day in preferred_day:
+                preferred_time_per_day[day] = st.multiselect(f"Preferred Time for {day}", ["7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+                                                                                           "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM",
+                                                                                           "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
+                                                                                           "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"])
+    
     
     # Program filter
     selected_batches = st.multiselect("Select Batch", ["Batch 1", "Batch 2"])
@@ -105,13 +119,22 @@ def main():
     subject_options = {f"{subject} ({hours} hours)": subject for subject, hours in subjects_with_hours}
     selected_subjects = st.multiselect("Select Subjects", list(subject_options.keys()))
 
+
+    #Notes text area
+    notes = st.text_area("Type here if you have additional notes for your schedule",
+                                  placeholder="Hello there!. Your unique scheduling preferences will be duly noted and accommodated. Many thanks for your cooperation!")
+
     # Button to save registration
     if st.button("Register"):
-        if name and preferred_day and preferred_time and selected_batches and selected_programs and selected_sections and selected_subjects:
-            save_faculty_registration(name, preferred_day, preferred_time, different_time, selected_batches, selected_programs, selected_sections, selected_subjects)
+        if name and preferred_day and selected_batches and selected_programs and selected_sections and selected_subjects:
+            if preferred_time_option == "Same Time":
+                preferred_time_text = ", ".join(preferred_time)
+            else:
+                preferred_time_text = ", ".join([f"{day}: {', '.join(preferred_time_per_day[day])}" for day in preferred_day])
+            
+            save_faculty_registration(name, preferred_day, preferred_time,notes, selected_batches, selected_programs, selected_sections, selected_subjects)
             preferred_day_text = ", ".join(preferred_day)
-            preferred_time_text = ", ".join(preferred_time)
-            st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Additional availability info: {different_time}.Your selected subjects are {selected_subjects} While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
+            st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Your notes: {notes}. Your selected subjects are {selected_subjects} While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
         else:
             st.warning("Please fill in all required fields.")
 

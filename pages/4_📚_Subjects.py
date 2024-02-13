@@ -57,6 +57,10 @@ def add_subject_to_db(program_name, section, subject_name, hours, room):  # Modi
     conn.close()
     st.success(f"Subject '{subject_name}' added successfully to program '{program_name}' in section '{section}'")
 
+    # Update available hours after adding subject
+    available_hours = calculate_available_hours_for_room(program_name, section, room)
+    st.sidebar.text(f"{room} availability: {available_hours} hours")
+
 # Function to delete a subject from the database
 def delete_subject(program_name, section, subject_name):
     conn = sqlite3.connect("subjects.db")
@@ -154,8 +158,7 @@ def main():
     
     # Calculate and display available hours for the selected room
     available_hours = calculate_available_hours_for_room(selected_program, selected_section, room_assignment)
-    st.sidebar.text(f"{room_assignment} availability: {available_hours}")
-
+    st.sidebar.text(f"{room_assignment} availability: {available_hours} hours")
 
     if st.sidebar.button("Add Subject"):
         add_subject_to_db(selected_program, selected_section, new_subject_name, hours_per_subject, room_assignment)  # Pass hours_per_subject and room_assignment
@@ -169,9 +172,11 @@ def main():
     # Option to duplicate subjects
     st.sidebar.header("Duplicate Subjects")
     source_section = st.sidebar.selectbox("Select Source Section", fetch_sections(selected_program))
-    target_section = st.sidebar.selectbox("Select Target Section", fetch_sections(selected_program))
-    if st.sidebar.button("Duplicate Subjects"):
+    target_section = st.sidebar.multiselect("Select Target Section", fetch_sections(selected_program))
+    duplicate_button_key = "duplicate_button"  # Unique key for the button
+    if st.sidebar.button("Duplicate Subjects", key=duplicate_button_key):
         duplicate_subjects(selected_program, source_section, target_section)
+
 
     # Display subjects in a table
     st.header(f"{selected_program} {selected_section} Subjects")
