@@ -2,7 +2,7 @@ import streamlit as st
 import sqlite3
 
 st.set_page_config(
-    page_title="Faculty",
+    page_title="Faculty Registration",
     page_icon="images/PUPLogo.png",
 )
 
@@ -54,17 +54,23 @@ def create_faculty_table():
     conn.commit()
     conn.close()
 
-# Function to save faculty registration to database
-def save_faculty_registration(name, preferred_day, preferred_time, notes, batch, program, selected_sections, subjects):
+def save_faculty_registration(name, preferred_day, preferred_time, notes, selected_batches, selected_programs, selected_sections, selected_subjects):
     conn = sqlite3.connect("faculty.db")
     c = conn.cursor()
-    preferred_day_str = ",".join(preferred_day)
-    preferred_time_str = ",".join(preferred_time)
-    selected_sections_str = ",".join(selected_sections)  # Convert selected_sections list to string
+    preferred_day_str = ",".join(preferred_day) if preferred_day else ""
+    preferred_time_str = ",".join(preferred_time) if preferred_time else ""
+    selected_batches_str = ",".join(selected_batches) if selected_batches else ""
+    selected_programs_str = ",".join(selected_programs) if selected_programs else ""
+    selected_sections_str = ",".join(selected_sections) if selected_sections else ""
+    selected_subjects_str = ",".join(selected_subjects) if selected_subjects else ""
+    
     c.execute("INSERT INTO faculty (name, preferred_day, preferred_time, notes, batch, program, section, subjects) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-              (name, preferred_day_str, preferred_time_str, notes, batch, program, selected_sections_str, ",".join(subjects)))
+              (name, preferred_day_str, preferred_time_str, notes, selected_batches_str, selected_programs_str, selected_sections_str, selected_subjects_str))
+    
     conn.commit()
     conn.close()
+
+
 
 # Streamlit UI
 def main():
@@ -80,40 +86,59 @@ def main():
         preferred_time_option = st.selectbox("Time for Selected Day/s", ["Same Time", "Varied Time"])
 
     if preferred_time_option == "Same Time":
-        preferred_time = st.multiselect("Preferred Time", ["7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
-                                                           "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM",
-                                                           "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-                                                           "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"])
+        preferred_time = st.multiselect("Preferred Time", 
+        ["7:00 AM - 7:30 AM", "7:30 AM - 8:00 AM", "8:00 AM - 8:30 AM", "8:30 AM - 9:00 AM",
+        "9:00 AM - 9:30 AM", "9:30 AM - 10:00 AM", "10:00 AM - 10:30 AM",
+        "10:30 AM - 11:00 AM", "11:00 AM - 11:30 AM", "11:30 AM - 12:00 PM",
+        "12:00 PM - 12:30 PM", "12:30 PM - 1:00 PM", "1:00 PM - 1:30 PM",
+        "1:30 PM - 2:00 PM", "2:00 PM - 2:30 PM", "2:30 PM - 3:00 PM", 
+        "3:00 PM - 3:30 PM", "3:30 PM - 4:00 PM", "4:00 PM - 4:30 PM", 
+        "4:30 PM - 5:00 PM", "5:00 PM - 5:30 PM", "5:30 PM - 6:00 PM",
+        "6:00 PM - 6:30 PM", "6:30 PM - 7:00 PM", "7:00 PM - 7:30 PM",
+        "7:30 PM - 8:00 PM", "8:00 PM - 8:30 PM", "8:30 PM - 9:00 PM"])
     else:
         preferred_time = None
         if preferred_day:
             preferred_time_per_day = {}
             for day in preferred_day:
-                preferred_time_per_day[day] = st.multiselect(f"Preferred Time for {day}", ["7:30 AM", "8:00 AM", "8:30 AM", "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
-                                                                                           "11:00 AM", "11:30 AM", "12:00 PM", "12:30 PM", "1:00 PM", "1:30 PM", "2:00 PM",
-                                                                                           "2:30 PM", "3:00 PM", "3:30 PM", "4:00 PM", "4:30 PM", "5:00 PM", "5:30 PM",
-                                                                                           "6:00 PM", "6:30 PM", "7:00 PM", "7:30 PM", "8:00 PM", "8:30 PM", "9:00 PM"])
+                preferred_time_per_day[day] = st.multiselect(f"Preferred Time for {day}",
+        ["7:00 AM - 7:30 AM", "7:30 AM - 8:00 AM", "8:00 AM - 8:30 AM", "8:30 AM - 9:00 AM",
+        "9:00 AM - 9:30 AM", "9:30 AM - 10:00 AM", "10:00 AM - 10:30 AM",
+        "10:30 AM - 11:00 AM", "11:00 AM - 11:30 AM", "11:30 AM - 12:00 PM",
+        "12:00 PM - 12:30 PM", "12:30 PM - 1:00 PM", "1:00 PM - 1:30 PM",
+        "1:30 PM - 2:00 PM", "2:00 PM - 2:30 PM", "2:30 PM - 3:00 PM", 
+        "3:00 PM - 3:30 PM", "3:30 PM - 4:00 PM", "4:00 PM - 4:30 PM", 
+        "4:30 PM - 5:00 PM", "5:00 PM - 5:30 PM", "5:30 PM - 6:00 PM",
+        "6:00 PM - 6:30 PM", "6:30 PM - 7:00 PM", "7:00 PM - 7:30 PM",
+        "7:30 PM - 8:00 PM", "8:00 PM - 8:30 PM", "8:30 PM - 9:00 PM"])
     
     
     # Program filter
     selected_batches = st.multiselect("Select Batch", ["Batch 1", "Batch 2"])
+
+    # Initialize selected_programs and selected_sections lists
     selected_programs = []
-    for batch in selected_batches:
-        selected_programs.extend(fetch_programs(batch))
-    selected_programs = list(set(selected_programs))  # Remove duplicates
-    selected_program = st.multiselect("Select Program", selected_programs)
-    
-    # Section selection
     selected_sections = []
-    for program in selected_program:
-        selected_sections.extend(st.multiselect(f"Select Sections for {program}", fetch_sections(program)))
-    selected_sections = list(set(selected_sections))  # Remove duplicates
-    
+
+    for batch in selected_batches:
+        selected_program = st.multiselect(f"Select Program for {batch}", fetch_programs(batch))
+        selected_programs.extend(selected_program)
+
+        for program in selected_program:
+            sections = fetch_sections(program)
+            selected_section = st.multiselect(f"Select Sections for {program} in {batch}", sections)
+            selected_sections.extend(selected_section)
+
+    # Remove duplicates
+    selected_programs = list(set(selected_programs))
+    selected_sections = list(set(selected_sections))
+
     # Fetch subjects and hours for the selected program and sections
     subjects_with_hours = []
     for section in selected_sections:
-        for program in selected_program:
+        for program in selected_programs:
             subjects_with_hours.extend(fetch_subjects_with_hours(program, section))
+
 
     # Display subjects with hours in the dropdown
     subject_options = {f"{subject} ({hours} hours)": subject for subject, hours in subjects_with_hours}
@@ -134,7 +159,8 @@ def main():
             
             save_faculty_registration(name, preferred_day, preferred_time,notes, selected_batches, selected_programs, selected_sections, selected_subjects)
             preferred_day_text = ", ".join(preferred_day)
-            st.success(f"Dear {name}, We've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}. Your notes: {notes}. Your selected subjects are {selected_subjects} While we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged. Thank you, and I wish you a pleasant day ahead!")
+            st.success(f"Dear {name},\n\nWe've taken note of your available day/s: {preferred_day_text}, and your preferred time: {preferred_time_text}.\n\nYour notes: {notes}.\n\nYour selected batch: {selected_batches}, program: {selected_programs}, sections: {selected_section}\n\nSelected subjects are {selected_subjects}.\n\nWhile we will ensure to manage schedules effectively to prevent conflicts with other faculty members, your preferences are duly acknowledged.\n\nThank you, and I wish you a pleasant day ahead!")
+
         else:
             st.warning("Please fill in all required fields.")
 

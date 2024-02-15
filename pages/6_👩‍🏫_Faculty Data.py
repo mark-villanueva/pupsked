@@ -55,7 +55,7 @@ def display_responses():
             if st.button(f"Delete {row[1]}"):
                 delete_registration(row[1])
                 st.success(f"Registration for {row[1]} deleted successfully!")
-                st.experimental_rerun()  # Rerun the app to reflect the changes
+                st.rerun()  # Rerun the app to reflect the changes
             
             st.write("---")
     else:

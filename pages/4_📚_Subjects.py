@@ -80,18 +80,20 @@ def fetch_subjects(program_name, section):
     return rows
 
 # Function to duplicate subjects from one section to another within the same program
-def duplicate_subjects(selected_program, source_section, target_section):
+def duplicate_subjects(selected_program, source_section, target_sections):
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
     c.execute("SELECT subject_name, hours, room FROM subjects WHERE program_name=? AND section=?", (selected_program, source_section))  # Included 'hours' and 'room'
     rows = c.fetchall()
-    for row in rows:
-        subject_name, hours, room = row
-        c.execute("INSERT INTO subjects (program_name, section, subject_name, hours, room) VALUES (?, ?, ?, ?, ?)",
-                  (selected_program, target_section, subject_name, hours, room))
+    for target_section in target_sections:
+        for row in rows:
+            subject_name, hours, room = row
+            c.execute("INSERT INTO subjects (program_name, section, subject_name, hours, room) VALUES (?, ?, ?, ?, ?)",
+                      (selected_program, target_section, subject_name, hours, room))
     conn.commit()
     conn.close()
-    st.success(f"Subjects duplicated from section '{source_section}' to section '{target_section}'")
+    st.success(f"Subjects duplicated from section '{source_section}' to sections: {', '.join(target_sections)}")
+
 
 # Function to fetch rooms from the database
 def fetch_rooms():
