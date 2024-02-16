@@ -36,6 +36,7 @@ def fetch_programs():
     conn.close()
     return [row[0] for row in rows]
 
+
 # Function to fetch sections for a given program from the database
 def fetch_sections(program_name):
     conn = sqlite3.connect("programs.db")
