@@ -27,14 +27,14 @@ def fetch_sections(program_name):
     else:
         return []
 
-# Function to retrieve subjects and hours for a given program and section from the database
-def fetch_subjects_with_hours(program_name, section):
+# Function to retrieve subjects for a given program and section from the database
+def fetch_subjects(program_name, section):
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
-    c.execute("SELECT subject_name, hours FROM subjects WHERE program_name=? AND section=?", (program_name, section))
+    c.execute("SELECT subject_code, subject_name FROM subjects WHERE program_name=? AND section=?", (program_name, section))
     rows = c.fetchall()
     conn.close()
-    return [(row[0], row[1]) for row in rows]
+    return [(f"{code} - {name}") for code, name in rows]
 
 # Function to create the faculty table if it does not exist
 def create_faculty_table():
@@ -87,7 +87,7 @@ def main():
 
     if preferred_time_option == "Same Time":
         preferred_time = st.multiselect("Preferred Time", 
-        ["7:00 AM - 7:30 AM", "7:30 AM - 8:00 AM", "8:00 AM - 8:30 AM", "8:30 AM - 9:00 AM",
+        ["7:30 AM - 8:00 AM", "8:00 AM - 8:30 AM", "8:30 AM - 9:00 AM",
         "9:00 AM - 9:30 AM", "9:30 AM - 10:00 AM", "10:00 AM - 10:30 AM",
         "10:30 AM - 11:00 AM", "11:00 AM - 11:30 AM", "11:30 AM - 12:00 PM",
         "12:00 PM - 12:30 PM", "12:30 PM - 1:00 PM", "1:00 PM - 1:30 PM",
@@ -102,7 +102,7 @@ def main():
             preferred_time_per_day = {}
             for day in preferred_day:
                 preferred_time_per_day[day] = st.multiselect(f"Preferred Time for {day}",
-        ["7:00 AM - 7:30 AM", "7:30 AM - 8:00 AM", "8:00 AM - 8:30 AM", "8:30 AM - 9:00 AM",
+        ["7:30 AM - 8:00 AM", "8:00 AM - 8:30 AM", "8:30 AM - 9:00 AM",
         "9:00 AM - 9:30 AM", "9:30 AM - 10:00 AM", "10:00 AM - 10:30 AM",
         "10:30 AM - 11:00 AM", "11:00 AM - 11:30 AM", "11:30 AM - 12:00 PM",
         "12:00 PM - 12:30 PM", "12:30 PM - 1:00 PM", "1:00 PM - 1:30 PM",
@@ -133,16 +133,15 @@ def main():
     selected_programs = list(set(selected_programs))
     selected_sections = list(set(selected_sections))
 
-    # Fetch subjects and hours for the selected program and sections
-    subjects_with_hours = []
+    # Fetch subjects for the selected program and sections
+    subjects = []
     for section in selected_sections:
         for program in selected_programs:
-            subjects_with_hours.extend(fetch_subjects_with_hours(program, section))
+            subjects.extend(fetch_subjects(program, section))
 
 
-    # Display subjects with hours in the dropdown
-    subject_options = {f"{subject} ({hours} hours)": subject for subject, hours in subjects_with_hours}
-    selected_subjects = st.multiselect("Select Subjects", list(subject_options.keys()))
+    # Display subjects in the dropdown
+    selected_subjects = st.multiselect("Select Subjects", subjects)
 
 
     #Notes text area

@@ -65,11 +65,13 @@ def main():
     if st.sidebar.button("Delete Room"):
         delete_room(selected_room)
 
-    # Display rooms in a table
+     # Display faculty in a table
     st.header("Rooms")
     rooms_data = fetch_rooms()
     if rooms_data:
-        st.table(rooms_data)
+        # Converting data to list of dictionaries
+        rooms_dict_list = [{"Rooms": name} for name, in rooms_data]
+        st.table(rooms_dict_list)  # Displaying data as a table
     else:
         st.write("No rooms found.")
 
