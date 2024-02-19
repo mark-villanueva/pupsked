@@ -96,7 +96,7 @@ def main():
         delete_registration_by_name(conn, selected_name)
         conn.close()
 
-   # Display responses for the selected faculty
+    # Display responses for the selected faculty
     st.subheader(f"Faculty Data for {selected_name}")
     conn = create_connection()
     cursor = conn.cursor()
@@ -118,8 +118,8 @@ def main():
                         st.write(f"Subject: {subject}")
                         st.write(f"Preferred Days: {', '.join(preferred_days)}")
                         st.write(f"Preferred Times: {', '.join(preferred_times)}")
+        st.write(f"Notes: {row[6]}")  # Moved inside the loop
 
-    st.write(f"Notes: {row[6]}")
     conn.close()
 
 

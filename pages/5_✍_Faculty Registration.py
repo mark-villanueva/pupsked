@@ -157,8 +157,6 @@ def main():
             st.error("An error occurred while saving faculty registration.")
         conn.close()
 
-
-
-
 if __name__ == "__main__":
     main()
+

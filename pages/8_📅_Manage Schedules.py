@@ -63,15 +63,25 @@ subjects = fetch_subjects(selected_program, selected_section)
 # Create a DataFrame for subjects
 subjects_df = pd.DataFrame(subjects, columns=["Subject Code", "Subject Name", "Lecture", "Lab", "Unit", "Hours", "Room", "Program", "Section"])
 
+# Add new columns "Faculty" and "Schedules" to the DataFrame
+subjects_df["Faculty"] = ""
+subjects_df["Schedules"] = ""
+
 # Filter subjects by room
 available_rooms = subjects_df["Room"].unique()
 selected_room = st.selectbox("Filter by Room", ["All"] + list(available_rooms))
 if selected_room != "All":
     subjects_df = subjects_df[subjects_df["Room"] == selected_room]
 
-
 # Display the combined table
 st.write("Schedules:")
 # Set larger width for the table
 st.write(subjects_df.style.set_table_styles([dict(selector='table', props=[('width', '100%')])]))
+
+
+
+
+
+
+
 
