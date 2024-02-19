@@ -7,27 +7,6 @@ st.set_page_config(
     page_icon="images/PUPLogo.png",
 )
 
-# Function to create database connection
-def create_connection():
-    conn = sqlite3.connect("faculty_registration.db")
-    return conn
-
-## Function to create the registrations table
-def create_table(conn):
-    try:
-        cursor = conn.cursor()
-        cursor.execute('''CREATE TABLE IF NOT EXISTS registrations (
-                            id INTEGER PRIMARY KEY,
-                            name TEXT,
-                            batches TEXT,
-                            program_section TEXT,  -- Add program_section column
-                            subjects TEXT,
-                            preferences TEXT,
-                            notes TEXT
-                          )''')
-        conn.commit()
-    except sqlite3.Error as e:
-        print(e)
 
 # Function to fetch programs from the database
 def fetch_programs():
