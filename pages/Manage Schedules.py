@@ -7,7 +7,6 @@ st.set_page_config(
     page_icon="images/PUPLogo.png",
 )
 
-
 # Function to fetch programs from the database
 def fetch_programs():
     conn = sqlite3.connect("programs.db")
