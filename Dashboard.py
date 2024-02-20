@@ -1,4 +1,8 @@
-from st_pages import Page, show_pages, add_page_title
+import streamlit as st
+
+st.title("Dashboard")
+
+from st_pages import Page, show_pages
 
 
 # Specify what pages should be shown in the sidebar, and what their titles and icons
