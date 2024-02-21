@@ -68,8 +68,21 @@ def fetch_sections(program_name):
     else:
         return []
 
-# Function to retrieve subjects for a given program and section from the database
-def fetch_subjects(program_name, section):
+# Function to retrieve previously saved subjects for a given program, section, and batch from the database
+def fetch_saved_subjects(batch, program, section):
+    conn = create_connection()
+    c = conn.cursor()
+    c.execute("SELECT subjects FROM registrations WHERE batches=? AND program_section=?",
+              (batch, f"{program} ({section})"))
+    rows = c.fetchall()
+    conn.close()
+    saved_subjects = []
+    for row in rows:
+        saved_subjects.extend(row[0].split(", "))
+    return saved_subjects
+
+# Modify the function to fetch subjects for a given program, section, and batch from the database
+def fetch_subjects(program_name, section, batch, selected_subjects):
     conn = sqlite3.connect("subjects.db")
     c = conn.cursor()
     c.execute("SELECT subject_code, subject_name FROM subjects WHERE program_name=? AND section=?", (program_name, section))
@@ -79,7 +92,23 @@ def fetch_subjects(program_name, section):
     # Extract available subjects from the database rows
     available_subjects = [(f"{code} - {name}") for code, name in rows]
 
+    # Fetch previously saved subjects for the selected faculty
+    saved_subjects = set()
+    for batch_data in selected_subjects.values():
+        for program_data in batch_data.values():
+            for section_data in program_data.values():
+                saved_subjects.update(section_data)
+
+    # Extract subject codes from the saved subjects
+    saved_subject_codes = set([subject.split(" - ")[0] for subject in saved_subjects])
+
+    # Exclude already saved subject codes from available subjects
+    available_subjects = [subject for subject in available_subjects if subject.split(" - ")[0] not in saved_subject_codes]
+
     return available_subjects
+
+
+
 
 # Streamlit UI
 def main():
@@ -113,8 +142,12 @@ def main():
         for program, sections in programs.items():
             selected_subjects[batch][program] = {}
             for section in sections:
-                subjects = fetch_subjects(program, section)
-                selected_subjects[batch][program][section] = st.multiselect(f"Select Subjects for {program} in {batch} ({section})", subjects)
+                # Fetch subjects for the current program, section, and batch
+                subjects = fetch_subjects(program, section, batch, selected_subjects[batch][program])
+
+
+                selected_subjects[batch][program][section] = st.multiselect(f"Select Subjects for {program} in {batch} ({section})", subjects, key=f"{batch}-{program}-{section}")
+
 
     # Preferences and notes
     subject_preferences = {}
