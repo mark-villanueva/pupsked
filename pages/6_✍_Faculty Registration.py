@@ -118,7 +118,7 @@ def main():
     st.header("Faculty Registration")
     
     # Input fields
-    name = st.text_input("Name", placeholder="Type your name (Surname, First name MI.)")
+    name = st.text_input("Name", placeholder="Type your name")
     
     selected_batches = st.multiselect("Select Batch", ["Batch 1", "Batch 2"])
 
