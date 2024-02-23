@@ -65,7 +65,8 @@ class CurriculumManager:
         rows = c.fetchall()
         conn.close()
         return [row[0] for row in rows]
-
+    
+    st.cache_data
     def add_subject_to_db(self, program_name, section, subject_code, subject_name, lec, lab, unit, hours, room, faculty_member=None, preferred_days=None, preferred_times=None, notes=None):
         conn = sqlite3.connect(self.subjects_db)
         c = conn.cursor()
@@ -74,24 +75,24 @@ class CurriculumManager:
         c.execute("SELECT * FROM subjects WHERE subject_code = ? AND program_name = ? AND section = ?", 
                 (subject_code, program_name, section))
         existing_subject = c.fetchone()
-
+        
         if existing_subject:
             # Update the existing subject with new information
             c.execute("UPDATE subjects SET subject_name = ?, lec = ?, lab = ?, unit = ?, hours = ?, room = ?, faculty_member = ?, preferred_days = ?, preferred_times = ?, notes = ? WHERE id = ?", 
                     (subject_name, lec, lab, unit, hours, room, faculty_member, preferred_days, preferred_times, notes, existing_subject[0]))
-            st.success(f"Subject '{subject_name}' updated successfully in program '{program_name}' in section '{section}'")
+            st.success(f"Faculty: {faculty_member} added successfully to {subject_name} in {program_name} {section}")
         else:
             # Insert a new subject into the database
             c.execute("INSERT INTO subjects (program_name, section, subject_code, subject_name, lec, lab, unit, hours, room, faculty_member, preferred_days, preferred_times, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", 
                     (program_name, section, subject_code, subject_name, lec, lab, unit, hours, room, faculty_member, preferred_days, preferred_times, notes))
-            st.success(f"Subject '{subject_name}' added successfully to program '{program_name}' in section '{section}'")
+            st.success(f"Subject {subject_name} added successfully to program {program_name} in section {section}")
 
         conn.commit()
         conn.close()
 
 
 
-
+    st.cache_data
     def delete_subject(self, program_name, section, subject_name):
         conn = sqlite3.connect(self.subjects_db)
         c = conn.cursor()
@@ -99,8 +100,8 @@ class CurriculumManager:
         conn.commit()
         conn.close()
         st.success(f"Subject '{subject_name}' deleted successfully from program '{program_name}' in section '{section}'")
-        st.experimental_rerun()
-
+        
+    st.cache_data
     def fetch_subjects(self, program_name, section):
         conn = sqlite3.connect(self.subjects_db)
         c = conn.cursor()
@@ -109,7 +110,7 @@ class CurriculumManager:
         conn.close()
         return rows
 
-
+    st.cache_data
     def duplicate_subjects(self, selected_program, source_section, target_sections):
         conn = sqlite3.connect(self.subjects_db)
         c = conn.cursor()
@@ -120,7 +121,9 @@ class CurriculumManager:
         conn.close()
         st.success(f"Subjects duplicated from section '{source_section}' to sections: {', '.join(target_sections)}")
 
+   
     # Function to retrieve faculty members from the database
+    st.cache_data
     def fetch_faculty(self):
         conn = sqlite3.connect("faculty.db")
         c = conn.cursor()
@@ -130,6 +133,7 @@ class CurriculumManager:
         return [row[0] for row in rows]
     
 # Streamlit UI
+
 def main():
 
     manager = CurriculumManager()
@@ -177,6 +181,7 @@ def main():
 
 
 # Input fields faculty preference
+    st.subheader("Assign Faculty to Subjects")
     faculty_names = manager.fetch_faculty()
     selected_faculty_name = st.selectbox("Faculty Name", faculty_names, placeholder="Type your name")
 
@@ -230,6 +235,7 @@ def main():
             room = selected_subject_details[6]
             # Call the method to add preferences to the database
             manager.add_subject_to_db(selected_program_for_faculty, selected_section_for_faculty, subject_code, subject_name, lec, lab, unit, hours, room, selected_faculty_name, preferred_days_str, preferred_times_str, notes)
+          
 
 
 
