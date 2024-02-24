@@ -1,73 +1,92 @@
 import streamlit as st
-import pandas as pd
-import sqlite3
+from streamlit_calendar import calendar
 
-st.set_page_config(
-    page_title="Manage Schedule",
-    page_icon="images/PUPLogo.png",
+st.set_page_config(page_title="Manage Schedules", page_icon="📆")
+
+mode = "resource-timegrid"
+
+events = [
+    {
+        "title": "Event 1",
+        "color": "#FFBD45",
+        "start": "11:30:00",
+        "end": "12:30:00",
+        "resourceId": "b",
+    },
+    {
+        "title": "Event 2",
+        "color": "#FF4B4B",
+        "start": "12:30:00",
+        "end": "15:30:00",
+        "resourceId": "a",
+    },
+    {
+        "title": "Event 3",
+        "color": "#3D9DF3",
+        "start": "07:30:00",
+        "end": "10:30:00",
+        "resourceId": "b",
+    },
+]
+
+calendar_resources = [
+    {"id": "a", "title": "Monday"},
+    {"id": "b", "title": "Tuesday"},
+    {"id": "c", "title": "Wednesday"},
+    {"id": "d", "title": "Thursday"},
+    {"id": "e", "title": "Friday"},
+    {"id": "f", "title": "Saturday"},
+]
+
+calendar_options = {
+    "editable": "true",
+    "navLinks": "true",
+    "resources": calendar_resources,
+    "selectable": "true",
+    "slotMinTime": "07:30:00",
+    "slotMaxTime": "21:30:00",
+    "displayEventTime": "false", 
+    "allDaySlot": False,
+    "headerToolbar": {
+        "left": "",
+        "center": "",
+        "right": "",
+    }
+}
+
+if "resource" in mode:
+    
+    if mode == "resource-timegrid":
+        calendar_options = {
+            **calendar_options,
+            "initialDate": "2023-07-01",
+            "initialView": "resourceTimeGridDay",
+        }
+
+# Convert start and end time strings to ISO-formatted strings
+for event in events:
+    event["start"] = f"2023-07-01T{event['start']}"
+    event["end"] = f"2023-07-01T{event['end']}"
+
+state = calendar(
+    events=st.session_state.get("events", events),
+    options=calendar_options,
+    custom_css="""
+    .fc-event-past {
+        opacity: 0.8;
+    }
+    .fc-event-time {
+        font-style: italic;
+    }
+    .fc-event-title {
+        font-weight: 700;
+    }
+    .fc-toolbar-title {
+        font-size: 2rem;
+    }
+    """,
+    key=mode,
 )
 
-class CurriculumManager:
-    def __init__(self):
-        self.subjects_db = "subjects.db"
-
-    def fetch_programs(self):
-        conn = sqlite3.connect("programs.db")
-        c = conn.cursor()
-        c.execute("SELECT name FROM programs")
-        rows = c.fetchall()
-        conn.close()
-        return ["All"] + [row[0] for row in rows]
-
-    def fetch_sections(self, program_name):
-        conn = sqlite3.connect("programs.db")
-        c = conn.cursor()
-        if program_name == "All":
-            c.execute("SELECT sections FROM programs")
-        else:
-            c.execute("SELECT sections FROM programs WHERE name=?", (program_name,))
-        rows = c.fetchall()
-        conn.close()
-        all_sections = set()
-        for row in rows:
-            all_sections.update(row[0].split(","))
-        return ["All"] + list(all_sections)
-
-    def fetch_subjects(self, program_name, section):
-        conn = sqlite3.connect(self.subjects_db)
-        c = conn.cursor()
-        if program_name == "All" and section == "All":
-            c.execute("SELECT subject_code, subject_name, lec, lab, unit, hours, room, faculty, schedules FROM subjects")
-        elif program_name == "All":
-            c.execute("SELECT subject_code, subject_name, lec, lab, unit, hours, room, faculty, schedules FROM subjects WHERE section=?", (section,))
-        elif section == "All":
-            c.execute("SELECT subject_code, subject_name, lec, lab, unit, hours, room, faculty, schedules FROM subjects WHERE program_name=?", (program_name,))
-        else:
-            c.execute("SELECT subject_code, subject_name, lec, lab, unit, hours, room, faculty, schedules FROM subjects WHERE program_name=? AND section=?", (program_name, section))
-        rows = c.fetchall()
-        conn.close()
-        return rows
-
-
-# Streamlit UI
-def main():
-    manager = CurriculumManager()
-
-    selected_program = st.selectbox("Select Program", manager.fetch_programs())
-    selected_section = st.selectbox("Select Section", manager.fetch_sections(selected_program))
-
-    st.header(f"Subjects")
-    subjects = manager.fetch_subjects(selected_program, selected_section)
-    if subjects:
-        subject_df = pd.DataFrame(subjects, columns=["Subject Code", "Subject Description", "Lecture Hours", "Lab Hours", "Units", "Total Hours", "Room", "Faculty", "Schedules"])
-        st.table(subject_df)
-    else:
-        st.write("No subjects found for the selected program and section.")
-
-if __name__ == "__main__":
-    main()
-
-
-
-
-
+if state.get("eventsSet") is not None:
+    st.session_state["events"] = state["eventsSet"]

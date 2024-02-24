@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 
+
 st.set_page_config(
     page_title="Curriculum",
     page_icon="images/PUPLogo.png",
